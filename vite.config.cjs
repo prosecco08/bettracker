@@ -88,7 +88,11 @@ module.exports = defineConfig({
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
         ]
       },
-      workbox: { globPatterns: ['**/*.{js,css,html,ico,png,svg}'] }
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        globIgnores: ['**/app-icon-source.png'],
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024
+      }
     })
   ]
 })
