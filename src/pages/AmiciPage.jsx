@@ -43,18 +43,26 @@ export default function AmiciPage() {
     setLoading(true)
     setError('')
 
-    try {
-      const [leaderboard, monthly] = await Promise.all([
-        getLeaderboard(),
-        getMonthlyChallenge(month, year)
-      ])
+    const [leaderboardResult, monthlyResult] = await Promise.allSettled([
+      getLeaderboard(),
+      getMonthlyChallenge(month, year)
+    ])
+    const loadErrors = []
 
-      setRows(leaderboard)
-      setChallengeRows(monthly.slice(0, 10))
-      await loadFriendships()
-    } catch (_error) {
-      setError('Non riesco a caricare la classifica.')
+    if (leaderboardResult.status === 'fulfilled') {
+      setRows(leaderboardResult.value)
+    } else {
+      loadErrors.push(`Non riesco a caricare la classifica. ${leaderboardResult.reason.message}`)
     }
+
+    if (monthlyResult.status === 'fulfilled') {
+      setChallengeRows(monthlyResult.value.slice(0, 10))
+    } else {
+      loadErrors.push(`Non riesco a caricare la sfida mensile. ${monthlyResult.reason.message}`)
+    }
+
+    setError(loadErrors.join(' '))
+    await loadFriendships()
 
     setLoading(false)
   }

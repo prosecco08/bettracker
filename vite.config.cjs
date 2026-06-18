@@ -40,20 +40,27 @@ function localApiPlugin() {
   }
 
   async function runApi(name, req, res) {
-    req.body = await parseBody(req)
-    req.query = Object.fromEntries(new URL(req.url, 'http://localhost').searchParams.entries())
-    res.status = code => {
-      res.statusCode = code
-      return res
-    }
-    res.json = body => {
-      res.setHeader('content-type', 'application/json')
-      res.end(JSON.stringify(body))
-    }
+    try {
+      req.body = await parseBody(req)
+      req.query = Object.fromEntries(new URL(req.url, 'http://localhost').searchParams.entries())
+      res.status = code => {
+        res.statusCode = code
+        return res
+      }
+      res.json = body => {
+        res.setHeader('content-type', 'application/json')
+        res.end(JSON.stringify(body))
+      }
 
-    const apiPath = pathToFileURL(path.resolve(__dirname, `api/${name}.js`)).href
-    const mod = await import(`${apiPath}?t=${Date.now()}`)
-    await mod.default(req, res)
+      const apiPath = pathToFileURL(path.resolve(__dirname, `api/${name}.js`)).href
+      const mod = await import(`${apiPath}?t=${Date.now()}`)
+      await mod.default(req, res)
+    } catch (error) {
+      if (res.writableEnded) return
+      res.statusCode = 500
+      res.setHeader('content-type', 'application/json')
+      res.end(JSON.stringify({ ok: false, error: error.message || 'Errore interno del server locale' }))
+    }
   }
 
   return {
@@ -62,6 +69,7 @@ function localApiPlugin() {
       server.middlewares.use('/api/data', (req, res) => runApi('data', req, res))
       server.middlewares.use('/api/sync-matches', (req, res) => runApi('sync-matches', req, res))
       server.middlewares.use('/api/cron', (req, res) => runApi('cron', req, res))
+      server.middlewares.use('/api/health', (req, res) => runApi('health', req, res))
     }
   }
 }

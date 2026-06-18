@@ -6,7 +6,32 @@ function ok(res, body = {}) {
 }
 
 function fail(res, error, status = 500) {
-  res.status(status).json({ ok: false, error: error.message || String(error) })
+  const message = error.message || String(error)
+  if (message.includes('ENOTFOUND') || message.includes('ECONNREFUSED')) {
+    res.status(status).json({
+      ok: false,
+      error: 'Database Neon non raggiungibile. Controlla che DATABASE_URL su Vercel sia la connection string completa di Neon.'
+    })
+    return
+  }
+
+  if (message.includes('Missing DATABASE_URL')) {
+    res.status(status).json({
+      ok: false,
+      error: 'DATABASE_URL mancante su Vercel.'
+    })
+    return
+  }
+
+  if (message.includes('Invalid DATABASE_URL')) {
+    res.status(status).json({
+      ok: false,
+      error: 'DATABASE_URL non valida su Vercel. Il valore deve iniziare con postgresql://'
+    })
+    return
+  }
+
+  res.status(status).json({ ok: false, error: message })
 }
 
 function betProfit(bet, stato = bet.stato) {

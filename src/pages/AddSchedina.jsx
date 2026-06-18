@@ -6,6 +6,19 @@ import { addBet, listMatches, syncMatches as syncCompetitionMatches } from '../l
 
 const DETAIL_REQUIRED = new Set(['Risultato esatto', 'Marcatore', 'Altro'])
 
+function readableApiError(apiError) {
+  if (!apiError) return ''
+
+  if (apiError.status === 429) {
+    const wait = apiError.detail?.match(/Wait\s+(\d+)\s+seconds/i)?.[1]
+    return wait
+      ? `Football-Data ha raggiunto il limite richieste. Aspetta ${wait} secondi e riprova.`
+      : 'Football-Data ha raggiunto il limite richieste. Aspetta un momento e riprova.'
+  }
+
+  return `Football-Data ha risposto ${apiError.status} per ${apiError.competition}. ${apiError.detail || 'Controlla piano API e token.'}`
+}
+
 export default function AddSchedina({ onSaved }) {
   const { user } = useAuth()
   const [campionato, setCampionato] = useState('PL')
@@ -68,7 +81,7 @@ export default function AddSchedina({ onSaved }) {
     const count = data?.inserted_or_updated || 0
     const apiError = data?.api_errors?.[0]
     if (apiError) {
-      setMessage(`Football-Data ha risposto ${apiError.status} per ${apiError.competition}. ${apiError.detail || 'Controlla piano API e token.'}`)
+      setMessage(readableApiError(apiError))
       return
     }
     setMessage(count > 0 ? `Partite aggiornate: ${count}.` : `Aggiornamento completato per ${data?.competition || campionato}, ma Football-Data non ha restituito partite tra ${data?.date_from || 'oggi'} e ${data?.date_to || 'i prossimi 90 giorni'}.`)

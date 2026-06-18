@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts'
 import { useAuth } from '../hooks/useAuth'
 import { filterBetsByMonth, filterBetsByYear, money, monthProfitData, signedMoney, summarizeBets } from '../lib/betStats'
-import { autoCloseFinishedBets as runAutoClose, deleteBet as removeBet, listBets, updateBetStatus } from '../lib/data'
+import { deleteBet as removeBet, listBets, updateBetStatus } from '../lib/data'
 import StatCard from '../components/StatCard'
 import BetCard from '../components/BetCard'
 
@@ -22,30 +22,15 @@ export default function HomePage({ goAdd }) {
 
     try {
       setBets(await listBets(user.uid))
-    } catch (_error) {
-      setError('Non riesco a caricare le schedine. Riprova tra poco.')
+    } catch (error) {
+      setError(`Non riesco a caricare le schedine. ${error.message}`)
     }
 
     setLoading(false)
   }
 
-  async function autoCloseFinishedBetsOnce() {
-    const todayKey = new Date().toISOString().slice(0, 10)
-    const storageKey = `auto-close-results:${user.uid}:${todayKey}`
-    if (localStorage.getItem(storageKey)) return
-
-    const data = await runAutoClose().catch(() => null)
-    if (!data?.ok) return
-
-    localStorage.setItem(storageKey, '1')
-    if (data?.auto_close?.closed > 0) {
-      load()
-    }
-  }
-
   useEffect(() => {
     load()
-    autoCloseFinishedBetsOnce()
   }, [])
 
   const totalStats = useMemo(() => summarizeBets(bets), [bets])
@@ -57,8 +42,8 @@ export default function HomePage({ goAdd }) {
     try {
       await updateBetStatus(user.uid, id, stato)
       load()
-    } catch (_error) {
-      setError('Non riesco ad aggiornare lo stato della schedina.')
+    } catch (error) {
+      setError(`Non riesco ad aggiornare lo stato della schedina. ${error.message}`)
     }
   }
 
@@ -69,8 +54,8 @@ export default function HomePage({ goAdd }) {
     try {
       await removeBet(user.uid, id)
       load()
-    } catch (_error) {
-      setError('Non riesco a eliminare la schedina.')
+    } catch (error) {
+      setError(`Non riesco a eliminare la schedina. ${error.message}`)
     }
   }
 

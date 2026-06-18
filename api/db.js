@@ -7,9 +7,14 @@ let schemaReady = false
 
 export function getPool() {
   if (!pool) {
-    if (!process.env.DATABASE_URL) throw new Error('Missing DATABASE_URL')
+    const connectionString = process.env.DATABASE_URL?.trim()
+    if (!connectionString) throw new Error('Missing DATABASE_URL')
+    if (!connectionString.startsWith('postgresql://') && !connectionString.startsWith('postgres://')) {
+      throw new Error('Invalid DATABASE_URL')
+    }
+
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString,
       ssl: { rejectUnauthorized: false }
     })
   }

@@ -1,12 +1,47 @@
-async function api(action, payload = {}) {
-  const res = await fetch('/api/data', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ action, payload })
-  })
-  const data = await res.json()
-  if (!data.ok) throw new Error(data.error || 'Operazione non riuscita')
+const REQUEST_TIMEOUT_MS = 25000
+
+async function requestJson(path, body) {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+
+  let res
+  try {
+    res = await fetch(path, {
+      method: 'POST',
+      headers: { accept: 'application/json', 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    })
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Il server sta impiegando troppo tempo a rispondere. Riprova tra poco.')
+    }
+    throw new Error('Il server non è raggiungibile. Controlla la connessione e riprova.')
+  } finally {
+    clearTimeout(timeout)
+  }
+
+  const contentType = res.headers.get('content-type') || ''
+  if (!contentType.includes('application/json')) {
+    throw new Error(
+      res.ok
+        ? 'Il server ha restituito una risposta non valida. Riavvia o ridistribuisci l\'applicazione.'
+        : `Servizio dati non disponibile (errore ${res.status}).`
+    )
+  }
+
+  let data
+  try {
+    data = await res.json()
+  } catch (_error) {
+    throw new Error('Il server ha restituito dati non validi. Riprova tra poco.')
+  }
+  if (!res.ok || !data.ok) throw new Error(data.error || `Operazione non riuscita (errore ${res.status})`)
   return data
+}
+
+async function api(action, payload = {}) {
+  return requestJson('/api/data', { action, payload })
 }
 
 export async function getProfile(userId) {
@@ -47,21 +82,11 @@ export async function listMatches(competitionCode, fromDate, toDate) {
 }
 
 export async function syncMatches(competitionCode) {
-  const res = await fetch('/api/sync-matches', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ competition: competitionCode })
-  })
-  return res.json()
+  return requestJson('/api/sync-matches', { competition: competitionCode })
 }
 
 export async function autoCloseFinishedBets() {
-  const res = await fetch('/api/sync-matches', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({})
-  })
-  return res.json()
+  return requestJson('/api/sync-matches', {})
 }
 
 export async function getGoal(userId, month, year) {

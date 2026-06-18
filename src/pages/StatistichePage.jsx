@@ -144,8 +144,8 @@ export default function StatistichePage() {
 
     try {
       setBets(await listBets(user.uid, 'asc'))
-    } catch (_error) {
-      setError('Non riesco a caricare le statistiche.')
+    } catch (error) {
+      setError(`Non riesco a caricare le statistiche. ${error.message}`)
     }
 
     setLoading(false)
