@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import AuthPage from './pages/AuthPage'
 import HomePage from './pages/HomePage'
@@ -35,11 +36,23 @@ function Shell() {
 
   return (
     <main className="app-shell">
-      {tab === 'home' && <HomePage goAdd={() => setTab('add')} />}
-      {tab === 'add' && <AddSchedina onSaved={() => setTab('home')} />}
-      {tab === 'stats' && <StatistichePage />}
-      {tab === 'friends' && <AmiciPage />}
-      {tab === 'profile' && <ProfiloPage />}
+      <div className="ambient ambient-one" />
+      <div className="ambient ambient-two" />
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={tab}
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {tab === 'home' && <HomePage goAdd={() => setTab('add')} />}
+          {tab === 'add' && <AddSchedina onSaved={() => setTab('home')} />}
+          {tab === 'stats' && <StatistichePage />}
+          {tab === 'friends' && <AmiciPage />}
+          {tab === 'profile' && <ProfiloPage />}
+        </motion.div>
+      </AnimatePresence>
       <BottomNav active={tab} onChange={setTab} />
     </main>
   )

@@ -92,21 +92,21 @@ export default function AddSchedina({ onSaved }) {
   }, [campionato])
 
   useEffect(() => {
-  const firstMarket = Object.keys(PREDICTION_GROUPS[categoriaPronostico] || {})[0] || ''
-  setMercatoPronostico(firstMarket)
-}, [categoriaPronostico])
+    const firstMarket = Object.keys(PREDICTION_GROUPS[categoriaPronostico] || {})[0] || ''
+    setMercatoPronostico(firstMarket)
+  }, [categoriaPronostico])
 
-useEffect(() => {
-  setPronostico(pronosticiDisponibili[0] || '')
-  setDettaglio('')
-}, [mercatoPronostico, categoriaPronostico])
+  useEffect(() => {
+    setPronostico(pronosticiDisponibili[0] || '')
+    setDettaglio('')
+  }, [mercatoPronostico, categoriaPronostico])
 
   function readablePrediction() {
     if (needsDetail && dettaglio.trim()) {
-  return `${categoriaPronostico} - ${mercatoPronostico} - ${pronostico}: ${dettaglio.trim()}`
-}
+      return `${categoriaPronostico} - ${mercatoPronostico} - ${pronostico}: ${dettaglio.trim()}`
+    }
 
-return `${categoriaPronostico} - ${mercatoPronostico} - ${pronostico}`
+    return `${categoriaPronostico} - ${mercatoPronostico} - ${pronostico}`
   }
 
   async function save(e) {
@@ -166,8 +166,9 @@ return `${categoriaPronostico} - ${mercatoPronostico} - ${pronostico}`
   return (
     <section className="page with-nav">
       <header className="plain-head">
-        <h1>Aggiungi schedina</h1>
-        <p>Compila partita, pronostico, puntata e quota.</p>
+        <small>BET BUILDER</small>
+        <h1>Nuova schedina</h1>
+        <p>Registra la giocata. Al resto pensano gli analytics.</p>
       </header>
 
       <form className="form-card" onSubmit={save}>
@@ -205,25 +206,25 @@ return `${categoriaPronostico} - ${mercatoPronostico} - ${pronostico}`
         )}
 
         <label>Categoria scommessa</label>
-<select value={categoriaPronostico} onChange={e => setCategoriaPronostico(e.target.value)}>
-  {Object.keys(PREDICTION_GROUPS).map(group => (
-    <option key={group} value={group}>{group}</option>
-  ))}
-</select>
+        <select value={categoriaPronostico} onChange={e => setCategoriaPronostico(e.target.value)}>
+          {Object.keys(PREDICTION_GROUPS).map(group => (
+            <option key={group} value={group}>{group}</option>
+          ))}
+        </select>
 
-<label>Mercato</label>
-<select value={mercatoPronostico} onChange={e => setMercatoPronostico(e.target.value)}>
-  {Object.keys(mercatiDisponibili).map(market => (
-    <option key={market} value={market}>{market}</option>
-  ))}
-</select>
+        <label>Mercato</label>
+        <select value={mercatoPronostico} onChange={e => setMercatoPronostico(e.target.value)}>
+          {Object.keys(mercatiDisponibili).map(market => (
+            <option key={market} value={market}>{market}</option>
+          ))}
+        </select>
 
-<label>Pronostico specifico</label>
-<select value={pronostico} onChange={e => setPronostico(e.target.value)}>
-  {pronosticiDisponibili.map(prediction => (
-    <option key={prediction} value={prediction}>{prediction}</option>
-  ))}
-</select>
+        <label>Pronostico specifico</label>
+        <select value={pronostico} onChange={e => setPronostico(e.target.value)}>
+          {pronosticiDisponibili.map(prediction => (
+            <option key={prediction} value={prediction}>{prediction}</option>
+          ))}
+        </select>
 
         {needsDetail && (
           <>

@@ -93,6 +93,28 @@ function filterBetsByMonth(bets, month, year) {
   })
 }
 
+function leaderboardForm(bets) {
+  const closed = bets
+    .filter(bet => bet.stato === 'vinta' || bet.stato === 'persa')
+    .sort((a, b) => new Date(a.created_at || a.data_partita) - new Date(b.created_at || b.data_partita))
+  const lastStatus = closed.at(-1)?.stato
+  let tail = 0
+  for (let index = closed.length - 1; index >= 0 && closed[index].stato === lastStatus; index -= 1) tail += 1
+
+  const threshold = new Date()
+  threshold.setHours(0, 0, 0, 0)
+  threshold.setDate(threshold.getDate() - 6)
+  const recentProfit = bets
+    .filter(bet => new Date(bet.created_at || bet.data_partita) >= threshold)
+    .reduce((sum, bet) => sum + betProfit(bet), 0)
+
+  return {
+    current_wins: lastStatus === 'vinta' ? tail : 0,
+    current_losses: lastStatus === 'persa' ? tail : 0,
+    recent_profit: recentProfit
+  }
+}
+
 async function allProfiles() {
   const result = await query('select * from profiles order by username asc')
   return result.rows
@@ -227,6 +249,7 @@ export default async function handler(req, res) {
         const stats = summarizeBets(userBets)
         return {
           ...profile,
+          ...leaderboardForm(userBets),
           totale_schedine: userBets.length,
           totale_puntato: stats.totalStake,
           totale_vincite: stats.totalWins,
